@@ -1,0 +1,39 @@
+clc;
+close all;
+clearvars;
+tic;
+N=100000;
+snr=-10:20;
+snrl=10.^(snr/10);
+n=1./snrl;
+bits=randi([0,1],1,N);
+bpsk=2*bits-1;
+y=zeros(length(snrl),N);
+ynorm=zeros(length(snrl),N);
+bitsRX=zeros(length(snrl),N);
+err=zeros(length(snrl),N);
+ber=zeros(1,length(snrl));
+for i=1:length(snrl)
+    noise=sqrt(n(i)/2)*(randn(1,N)+1j*randn(1,N));
+    h=sqrt(1/2)*(randn(1,N)+1j*randn(1,N));
+    y(i,:)=h.*bpsk+noise;
+    ynorm(i,:) = y(i,:)./h;
+end
+for i=1:length(snrl)
+for j=1:N
+    bitsRX(i,j)=real(ynorm(i,j))>0;
+end
+err(i,:)=(bitsRX(i,:)~=bits);
+ber(i)=(sum(err(i,:)))/N;
+end
+
+theory_bit_rate=(1/2)*(1-sqrt(snrl./(snrl+1)));
+figure(1);
+semilogy(snr, theory_bit_rate,'r-')  
+hold on
+semilogy(snr, ber,'k*')                                
+xlabel('SNR[dB]')                                    
+ylabel('Bit Error Rate');                                        
+legend('Theoretical', 'Simulated');
+grid on;
+hold off;
